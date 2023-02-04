@@ -1,0 +1,13 @@
+name: sdp
+path: /
+port: 9108
+
+redis:
+  host: 127.0.0.1:6379
+  pass:
+
+mysql:
+  host:
+  pass:
+  user:
+  db:
