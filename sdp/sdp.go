@@ -1,27 +1,28 @@
-package http
+package sdp
 
 import (
 	"fmt"
 	"github.com/saxon134/go-sdp/conf"
 	"github.com/saxon134/go-sdp/db"
 	"github.com/saxon134/go-sdp/db/models"
+	"github.com/saxon134/go-sdp/io"
 	"github.com/saxon134/go-utils/saData/saHit"
 	"time"
 )
 
-const SdpAppKey = "%s:apps:%s"
+const RedisAppKey = "%s:apps:%s"
 
-type SdpConfig struct {
+type Config struct {
 	Host   string `json:"h"`
 	Port   int    `json:"p"`
 	Weight int    `json:"w,omitempty"` //权重
 	Time   int64  `json:"t"`           //上次ping的时间
 }
 
-var sdpChan chan SdpRequest
+var Chan chan io.SdpRequest
 
 func init() {
-	sdpChan = make(chan SdpRequest, 10)
+	Chan = make(chan io.SdpRequest, 10)
 	go appSdp()
 }
 
@@ -29,14 +30,14 @@ func init() {
 // 所以使用channel保证一致性，如果是部署多个实例，因为并发可能性极低，暂不考虑
 func appSdp() {
 	for {
-		if in, ok := <-sdpChan; ok {
+		if in, ok := <-Chan; ok {
 			var key = saHit.Str(conf.Conf.Name != "", conf.Conf.Name, "sdp")
-			key = fmt.Sprintf(SdpAppKey, key, in.App)
+			key = fmt.Sprintf(RedisAppKey, key, in.App)
 
-			var sdpAry = make([]*SdpConfig, 0, 10)
+			var sdpAry = make([]*Config, 0, 10)
 			_ = db.Redis.GetObj(key, &sdpAry)
 
-			var existed *SdpConfig
+			var existed *Config
 			for _, c := range sdpAry {
 				if c.Host == in.Host && c.Port == in.Port {
 					existed = c
@@ -48,7 +49,7 @@ func appSdp() {
 
 			//不存在是注册
 			if existed == nil {
-				var m = &SdpConfig{
+				var m = &Config{
 					Host:   in.Host,
 					Port:   in.Port,
 					Weight: 100,

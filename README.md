@@ -4,13 +4,13 @@
 
 Service Discovery Protocol
 
-基于Redis的服务发现、负载均衡
+基于Redis的服务发现
 
 ### 使用须知
 
 Redis必须配置
 
-如果配置了秘钥，则所有接口都需要加密
+如果配置了秘钥，则所有请求接口都需要加密（go-sdp/sdp路径下提供的注册、ping都已处理）
 
 加密方式是：sign = lowercase( MD5(secret + timestamp) )，接口带上sign和timestamp
 
@@ -21,12 +21,12 @@ Redis必须配置
 
 	1. 可以作为配置中心使用
 
-	2. 获取注册服务所在服务器的负载情况
-
 
 如果配置了阿里云账户：
 
 	1. 可以通过接口获取负载情况
+
+	2. 可以根据机器负载情况分配负载
 	
 
 配置中心、查看负载情况，参考前端项目：https://github.com/saxon134/go-sdp-ms

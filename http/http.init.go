@@ -4,6 +4,8 @@ import (
 	"github.com/saxon134/go-sdp/conf"
 	"github.com/saxon134/go-sdp/db"
 	"github.com/saxon134/go-sdp/db/models"
+	"github.com/saxon134/go-sdp/io"
+	"github.com/saxon134/go-sdp/sdp"
 	"github.com/saxon134/go-utils/saData"
 	"github.com/saxon134/go-utils/saData/saUrl"
 	"github.com/saxon134/go-utils/saLog"
@@ -24,14 +26,6 @@ func Init() {
 	if err != nil {
 		panic("http err:" + err.Error())
 	}
-}
-
-type SdpRequest struct {
-	App  string  `json:"app" form:"app"`
-	Host string  `json:"host" form:"host"`
-	Port int     `json:"port" form:"port"`
-	Cpu  float32 `json:"cpu" form:"cpu"`
-	Memo float32 `json:"memo" form:"memo"`
 }
 
 func checkSign(sign string, timestamp string) bool {
@@ -57,7 +51,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var in = SdpRequest{}
+	var in = io.SdpRequest{}
 	in.App = query.Get("app")
 	in.Host = query.Get("host")
 	in.Port, _ = saData.ToInt(query.Get("port"))
@@ -70,7 +64,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//注册app服务
-	sdpChan <- in
+	sdp.Chan <- in
 	w.WriteHeader(200)
 	_, _ = w.Write([]byte(saData.String(map[string]interface{}{"code": 0})))
 }
