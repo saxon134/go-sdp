@@ -2,15 +2,13 @@ package sdp
 
 import (
 	"fmt"
-	"github.com/saxon134/go-sdp/conf"
 	"github.com/saxon134/go-sdp/db"
 	"github.com/saxon134/go-sdp/db/models"
-	"github.com/saxon134/go-sdp/io"
 	"github.com/saxon134/go-utils/saData/saHit"
 	"time"
 )
 
-const RedisAppKey = "%s:apps:%s"
+const RedisAppKey = "sdp:apps:%s"
 
 type Config struct {
 	Host   string `json:"h"`
@@ -19,10 +17,18 @@ type Config struct {
 	Time   int64  `json:"t"`           //上次ping的时间
 }
 
-var Chan chan io.SdpRequest
+type Request struct {
+	App  string  `json:"app" form:"app"`
+	Host string  `json:"host" form:"host"`
+	Port int     `json:"port" form:"port"`
+	Cpu  float32 `json:"cpu" form:"cpu"`
+	Memo float32 `json:"memo" form:"memo"`
+}
+
+var Chan chan Request
 
 func init() {
-	Chan = make(chan io.SdpRequest, 10)
+	Chan = make(chan Request, 10)
 	go appSdp()
 }
 
@@ -31,9 +37,7 @@ func init() {
 func appSdp() {
 	for {
 		if in, ok := <-Chan; ok {
-			var key = saHit.Str(conf.Conf.Name != "", conf.Conf.Name, "sdp")
-			key = fmt.Sprintf(RedisAppKey, key, in.App)
-
+			var key = fmt.Sprintf(RedisAppKey, in.App)
 			var sdpAry = make([]*Config, 0, 10)
 			_ = db.Redis.GetObj(key, &sdpAry)
 

@@ -35,7 +35,7 @@ Redis必须配置
 ### 配置文件说明（config.yaml）
 
 ```
-name: sdp    //项目名，默认sdp。Redis key会添加其作为前缀
+name: sdp    //项目名，默认sdp
 path: /      //http服务接口路径
 port: 
 

@@ -9,9 +9,16 @@ import (
 	"time"
 )
 
+var pingParams map[string]string
+
 // Register 注册服务
-func Register(address string, host string, port int, secret string) {
-	var params = map[string]string{"host": host, "port": saData.Itos(port)}
+func Register(address string, app string, host string, port int, secret string) {
+	if host == "" || port <= 0 {
+		saLog.Err("RPC register error: leak params")
+		return
+	}
+
+	var params = map[string]string{"app": app, "host": host, "port": saData.Itos(port)}
 	if secret != "" {
 		var timestamp = saData.I64tos(time.Now().Unix())
 		params["timestamp"] = timestamp
@@ -23,26 +30,31 @@ func Register(address string, host string, port int, secret string) {
 		return
 	}
 
+	pingParams = params
+	pingParams["address"] = address
+	pingParams["secret"] = secret
 	for {
-		go ping(address, host, port, secret)
+		go ping()
 		time.Sleep(time.Second * 2)
 	}
 }
 
-func ping(address string, host string, port int, secret string) {
+func ping() {
 	defer func() {
 		if err := recover(); err != nil {
 			saLog.Err("Sdp ping panic:", err)
 		}
 	}()
 
-	var params = map[string]string{"host": host, "port": saData.Itos(port)}
+	var params = map[string]string{"app": pingParams["app"], "host": pingParams["host"], "port": pingParams["port"]}
+	var secret = pingParams["secret"]
 	if secret != "" {
 		var timestamp = saData.I64tos(time.Now().Unix())
 		params["timestamp"] = timestamp
 		params["sign"] = saData.Md5(secret+timestamp, true)
 	}
-	_, err := saHttp.Get(saUrl.ConnectUri(address, "ping"), params)
+
+	_, err := saHttp.Get(saUrl.ConnectUri(pingParams["address"], "ping"), params)
 	if err != nil {
 		saLog.Err("Sdp ping error:", err)
 		return

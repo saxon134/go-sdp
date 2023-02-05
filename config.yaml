@@ -1,6 +1,6 @@
 name: sdp
 path: /
-port: 9108
+port: 10108
 
 redis:
   host: 127.0.0.1:6379
