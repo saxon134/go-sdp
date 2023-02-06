@@ -29,12 +29,13 @@ var Chan chan Request
 
 func init() {
 	Chan = make(chan Request, 10)
-	go appSdp()
+	go registerAndPing()
+	go expiredCheck()
 }
 
 // 处理的时候必须保证要能拿到Redis数据
 // 所以使用channel保证一致性，如果是部署多个实例，因为并发可能性极低，暂不考虑
-func appSdp() {
+func registerAndPing() {
 	for {
 		if in, ok := <-Chan; ok {
 			var key = fmt.Sprintf(RedisAppKey, in.App)
@@ -106,5 +107,38 @@ func appSdp() {
 				db.MySql.Save(obj)
 			}
 		}
+	}
+}
+
+func expiredCheck() {
+	for {
+		var keyAry = []string{}
+		err := db.Redis.GetObj("sdp:apps:*", &keyAry)
+		if err != nil {
+			continue
+		}
+
+		for _, key := range keyAry {
+			var configAry = make([]Config, 0, 5)
+			err = db.Redis.GetObj(key, &configAry)
+			if err != nil {
+				continue
+			}
+
+			var now = time.Now().UnixMilli()
+			var newConfigAry = make([]Config, 0, len(configAry))
+			for _, v := range configAry {
+				//未过期
+				if now-v.Time < 6000 {
+					newConfigAry = append(newConfigAry, v)
+				}
+			}
+
+			if len(newConfigAry) != len(configAry) {
+				_ = db.Redis.SetObj(key, newConfigAry, time.Hour*48)
+			}
+		}
+
+		time.Sleep(time.Second * 3)
 	}
 }
