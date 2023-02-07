@@ -4,6 +4,7 @@ import (
 	"github.com/saxon134/go-sdp/conf"
 	"github.com/saxon134/go-sdp/db"
 	"github.com/saxon134/go-sdp/http"
+	"github.com/saxon134/go-sdp/sdp"
 	"github.com/saxon134/go-utils/saLog"
 )
 
@@ -19,6 +20,9 @@ func main() {
 
 	//初始化http服务
 	go http.Init()
+
+	//初始化SDP
+	sdp.Init()
 
 	//防止应用退出
 	<-make(chan bool)

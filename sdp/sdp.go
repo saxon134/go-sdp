@@ -27,7 +27,7 @@ type Request struct {
 
 var Chan chan Request
 
-func init() {
+func Init() {
 	Chan = make(chan Request, 10)
 	go registerAndPing()
 	go expiredCheck()
@@ -112,6 +112,8 @@ func registerAndPing() {
 
 func expiredCheck() {
 	for {
+		time.Sleep(time.Second * 3)
+		
 		var keyAry = []string{}
 		err := db.Redis.GetObj("sdp:apps:*", &keyAry)
 		if err != nil {
@@ -138,7 +140,5 @@ func expiredCheck() {
 				_ = db.Redis.SetObj(key, newConfigAry, time.Hour*48)
 			}
 		}
-
-		time.Sleep(time.Second * 3)
 	}
 }

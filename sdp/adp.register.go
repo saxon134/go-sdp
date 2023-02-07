@@ -34,8 +34,8 @@ func Register(address string, app string, host string, port int, secret string) 
 	pingParams["address"] = address
 	pingParams["secret"] = secret
 	for {
-		go ping()
 		time.Sleep(time.Second * 2)
+		go ping()
 	}
 }
 
