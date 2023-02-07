@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/saxon134/go-sdp/db"
 	"github.com/saxon134/go-sdp/db/models"
+	"github.com/saxon134/go-utils/saData"
 	"github.com/saxon134/go-utils/saData/saHit"
 	"time"
 )
@@ -113,13 +114,12 @@ func registerAndPing() {
 func expiredCheck() {
 	for {
 		time.Sleep(time.Second * 3)
-		
-		var keyAry = []string{}
-		err := db.Redis.GetObj("sdp:apps:*", &keyAry)
+
+		res, err := db.Redis.Do("keys", "sdp:apps:*")
 		if err != nil {
 			continue
 		}
-
+		keyAry, _ := saData.ToStrAry(res)
 		for _, key := range keyAry {
 			var configAry = make([]Config, 0, 5)
 			err = db.Redis.GetObj(key, &configAry)
