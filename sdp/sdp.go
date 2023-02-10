@@ -137,7 +137,11 @@ func expiredCheck() {
 			}
 
 			if len(newConfigAry) != len(configAry) {
-				_ = db.Redis.SetObj(key, newConfigAry, time.Hour*48)
+				if len(newConfigAry) == 0 {
+					_ = db.Redis.SetObj(key, "", time.Hour*48)
+				} else {
+					_ = db.Redis.SetObj(key, newConfigAry, time.Hour*48)
+				}
 			}
 		}
 	}
